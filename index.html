@@ -93,24 +93,29 @@
             const urlInput = document.getElementById('url-input');
             const resultDiv = document.getElementById('result');
             const prntscUrl = urlInput.value.trim();
+            const prefix = 'https://prnt.sc/';
 
-            // Validar que la URL es de prnt.sc
-            const regex = /^https?:\/\/prnt\.sc\/([a-zA-Z0-9_-]+)\\/?$/;
-            const match = prntscUrl.match(regex);
-
-            if (match && match[1]) {
-                const imageId = match[1];
-                // El archivo prntsc_viewer.html debe estar en la misma carpeta
-                const viewerUrl = `./prntsc_viewer.html#${imageId}`;
-
+            function showError() {
                 resultDiv.style.display = 'block';
-                resultDiv.innerHTML = `
-                    <p>¡Link generado! Haz clic para ver la imagen:</p>
-                    <a href="${viewerUrl}" target="_blank">${viewerUrl}</a>
-                `;
+                resultDiv.innerHTML = '<p style="color: red;">La URL no es válida. Asegúrate de que empieza con https://prnt.sc/</p>';
+            }
+
+            if (prntscUrl.startsWith(prefix)) {
+                const imageId = prntscUrl.substring(prefix.length).split('/')[0]; // Get only the ID part
+                if (imageId) {
+                    // El archivo prntsc_viewer.html debe estar en la misma carpeta
+                    const viewerUrl = `./prntsc_viewer.html#${imageId}`;
+
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `
+                        <p>¡Link generado! Haz clic para ver la imagen:</p>
+                        <a href="${viewerUrl}" target="_blank">${viewerUrl}</a>
+                    `;
+                } else {
+                    showError();
+                }
             } else {
-                resultDiv.style.display = 'block';
-                resultDiv.innerHTML = '<p style="color: red;">La URL no es válida. Por favor, introduce un link de prnt.sc. Ejemplo: https://prnt.sc/abcdef1234</p>';
+                showError();
             }
         });
     </script>
