@@ -78,8 +78,8 @@
                 const html = await response.text();
 
                 // 4. Extraer la URL de la imagen real desde el HTML de la página.
-                // Buscamos algo como <img ... src="URL_REAL_DE_LA_IMAGEN">
-                const match = html.match(/<img[^>]+id="screenshot-image"[^>]+src="([^"]+)"/);
+                // La URL de la imagen está alojada en 'img.lightshot.app'.
+                const match = html.match(/(https:\/\/img\.lightshot\.app\/[^\s"]+)/);
 
                 if (match && match[1]) {
                     const imageUrl = match[1];
