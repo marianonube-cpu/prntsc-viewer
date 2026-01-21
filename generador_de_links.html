@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Links para Prnt.sc</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #1a1a1a;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        #url-input {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        #generate-btn {
+            padding: 12px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #generate-btn:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #e9f5ff;
+            border: 1px solid #bce8f1;
+            border-radius: 5px;
+            display: none; /* Oculto hasta que se genere un link */
+            word-wrap: break-word;
+        }
+        #result a {
+            color: #0056b3;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        #result a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Generador de Links</h1>
+        <p>Pega un link de <strong>prnt.sc</strong> para crear un enlace directo y ver la imagen a pantalla completa.</p>
+        <div class="input-group">
+            <input type="text" id="url-input" placeholder="https://prnt.sc/xxxxxxxxxx">
+            <button id="generate-btn">Generar Link</button>
+        </div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('generate-btn').addEventListener('click', () => {
+            const urlInput = document.getElementById('url-input');
+            const resultDiv = document.getElementById('result');
+            const prntscUrl = urlInput.value.trim();
+
+            // Validar que la URL es de prnt.sc
+            const regex = /^https?:\/\/prnt\.sc\/([a-zA-Z0-9_-]+)\\/?$/;
+            const match = prntscUrl.match(regex);
+
+            if (match && match[1]) {
+                const imageId = match[1];
+                // El archivo prntsc_viewer.html debe estar en la misma carpeta
+                const viewerUrl = `./prntsc_viewer.html#${imageId}`;
+
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <p>¡Link generado! Haz clic para ver la imagen:</p>
+                    <a href="${viewerUrl}" target="_blank">${viewerUrl}</a>
+                `;
+            } else {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '<p style="color: red;">La URL no es válida. Por favor, introduce un link de prnt.sc. Ejemplo: https://prnt.sc/abcdef1234</p>';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor de Prnt.sc</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #111;
+            color: #eee;
+            font-family: sans-serif;
+        }
+        #loader {
+            font-size: 1.2em;
+        }
+        img {
+            max-width: 100vw;
+            max-height: 100vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }
+        #error-container {
+            text-align: center;
+            padding: 20px;
+        }
+        #error-container a {
+            color: #8af;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">Cargando...</div>
+    <div id="image-container"></div>
+    <div id="error-container" style="display: none;"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loader = document.getElementById('loader');
+            const imageContainer = document.getElementById('image-container');
+            const errorContainer = document.getElementById('error-container');
+
+            // 1. Obtener el ID de la imagen del hash de la URL (ej: #MSyd2ujFfgV0)
+            const imageId = window.location.hash.substring(1);
+
+            if (!imageId) {
+                loader.style.display = 'none';
+                errorContainer.style.display = 'block';
+                errorContainer.innerHTML = `
+                    <h2>No se encontró un ID de imagen</h2>
+                    <p>Por favor, añade el ID de la imagen de prnt.sc a la URL después de un '#'.</p>
+                    <p>Ejemplo: <code>.../prntsc_viewer.html#MSyd2ujFfgV0</code></p>
+                `;
+                return;
+            }
+
+            // 2. Construir la URL de la página de prnt.sc
+            const prntscUrl = `https://prnt.sc/${imageId}`;
+
+            // 3. Usar un proxy CORS para poder acceder al HTML de la página.
+            // Esto es necesario por las restricciones de seguridad de los navegadores.
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(prntscUrl)}`;
+
+            try {
+                const response = await fetch(proxyUrl);
+                if (!response.ok) {
+                    throw new Error(`Error al acceder a la página de prnt.sc (código: ${response.status})`);
+                }
+                const html = await response.text();
+
+                // 4. Extraer la URL de la imagen real desde el HTML de la página.
+                // Buscamos algo como <img ... src="URL_REAL_DE_LA_IMAGEN">
+                const match = html.match(/<img[^>]+class="[^ vital screenshot-image"[^>]+src="([^"]+)"/);
+
+                if (match && match[1]) {
+                    const imageUrl = match[1];
+
+                    // 5. Crear la imagen y mostrarla
+                    const img = document.createElement('img');
+                    img.src = imageUrl;
+                    img.alt = `Imagen de ${prntscUrl}`;
+                    
+                    img.onload = () => {
+                        loader.style.display = 'none';
+                        imageContainer.appendChild(img);
+                    };
+                    img.onerror = () => {
+                         throw new Error(`No se pudo cargar la imagen final desde: ${imageUrl}`);
+                    };
+
+                } else {
+                    throw new Error('No se pudo encontrar la URL de la imagen en la página de prnt.sc. Es posible que el enlace esté roto o la estructura de la página haya cambiado.');
+                }
+            } catch (error) {
+                loader.style.display = 'none';
+                errorContainer.style.display = 'block';
+                errorContainer.innerHTML = `
+                    <h2>Ha ocurrido un error</h2>
+                    <p>${error.message}</p>
+                    <p>Intenta visitar el enlace directamente: <a href="${prntscUrl}" target="_blank">${prntscUrl}</a></p>
+                `;
+                console.error(error);
+            }
+        });
+    </script>
+
+</body>
+</html>
