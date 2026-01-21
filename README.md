@@ -8,7 +8,7 @@ Esta es una sencilla herramienta web para visualizar imágenes de `prnt.sc` a pa
     -   [https://marianonube-cpu.github.io/prntsc-viewer/](https://marianonube-cpu.github.io/prntsc-viewer/)
 
 2.  **Pega tu link de `prnt.sc`:**
-    -   En el campo de texto, introduce la URL completa de la imagen que quieres ver (por ejemplo, `https://prnt.sc/MSyd2ujFfgV0`).
+    -   En el campo de texto, introduce la URL completa de la imagen que quieres ver (por ejemplo, `https://prnt.sc/ID_DE_IMAGEN_EJEMPLO`).
 
 3.  **Genera el enlace directo:**
     -   Haz clic en el botón "Generar Link".
