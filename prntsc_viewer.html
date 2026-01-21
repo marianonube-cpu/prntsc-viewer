@@ -79,7 +79,7 @@
 
                 // 4. Extraer la URL de la imagen real desde el HTML de la página.
                 // Buscamos algo como <img ... src="URL_REAL_DE_LA_IMAGEN">
-                const match = html.match(/<img[^>]+class="[^ vital screenshot-image"[^>]+src="([^"]+)"/);
+                const match = html.match(/<img[^>]+id="screenshot-image"[^>]+src="([^"]+)"/);
 
                 if (match && match[1]) {
                     const imageUrl = match[1];
