@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visor de Prnt.sc</title>
+    <title data-i18n="pageTitle">Visor de Prnt.sc</title>
     <style>
         body, html {
             margin: 0;
@@ -16,6 +16,7 @@
             background-color: #111;
             color: #eee;
             font-family: sans-serif;
+            position: relative;
         }
         #loader {
             font-size: 1.2em;
@@ -35,82 +36,152 @@
         #error-container a {
             color: #8af;
         }
+        #lang-switcher {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 0.9em;
+            z-index: 10;
+        }
+        #lang-switcher a {
+            text-decoration: none;
+            color: #ccc;
+            padding: 3px;
+        }
+        #lang-switcher a.active {
+            font-weight: bold;
+            text-decoration: underline;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
+    <div id="lang-switcher">
+        <a href="#" data-lang="es" class="active">ES</a> |
+        <a href="#" data-lang="en">EN</a>
+    </div>
 
-    <div id="loader">Cargando...</div>
+    <div id="loader" data-i18n="loading">Cargando...</div>
     <div id="image-container"></div>
     <div id="error-container" style="display: none;"></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        const translations = {
+            es: {
+                pageTitle: "Visor de Prnt.sc",
+                loading: "Cargando...",
+                noIdFound: "No se encontró un ID de imagen",
+                noIdInstructions: "Por favor, añade el ID de la imagen de prnt.sc a la URL después de un '#'.",
+                example: "Ejemplo:",
+                fetchError: "Error al acceder a la página de prnt.sc",
+                imageLoadError: "No se pudo cargar la imagen final desde:",
+                imageFindError: "No se pudo encontrar la URL de la imagen en la página de prnt.sc. Es posible que el enlace esté roto o la estructura de la página haya cambiado.",
+                genericError: "Ha ocurrido un error",
+                tryDirectLink: "Intenta visitar el enlace directamente:"
+            },
+            en: {
+                pageTitle: "Prnt.sc Viewer",
+                loading: "Loading...",
+                noIdFound: "No Image ID Found",
+                noIdInstructions: "Please add the prnt.sc image ID to the URL after a '#'.",
+                example: "Example:",
+                fetchError: "Error accessing the prnt.sc page",
+                imageLoadError: "Could not load the final image from:",
+                imageFindError: "Could not find the image URL on the prnt.sc page. The link may be broken or the page structure may have changed.",
+                genericError: "An error has occurred",
+                tryDirectLink: "Try visiting the link directly:"
+            }
+        };
+
+        let currentLang = 'es';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.documentElement.lang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.innerHTML = translations[lang][key];
+            });
+            document.querySelectorAll('#lang-switcher a').forEach(a => {
+                a.classList.remove('active');
+                if (a.getAttribute('data-lang') === lang) {
+                    a.classList.add('active');
+                }
+            });
+        }
+
+        async function main() {
             const loader = document.getElementById('loader');
             const imageContainer = document.getElementById('image-container');
             const errorContainer = document.getElementById('error-container');
+            
+            const userLang = new URLSearchParams(window.location.search).get('lang');
+            const initialLang = (userLang === 'en' || userLang === 'es') ? userLang : 'es';
+            setLanguage(initialLang);
 
-            // 1. Obtener el ID de la imagen del hash de la URL (ej: #MSyd2ujFfgV0)
+            document.querySelectorAll('#lang-switcher a').forEach(a => {
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const lang = e.target.getAttribute('data-lang');
+                    setLanguage(lang);
+                    // No need to reload, just update text
+                });
+            });
+
             const imageId = window.location.hash.substring(1);
 
             if (!imageId) {
                 loader.style.display = 'none';
                 errorContainer.style.display = 'block';
                 errorContainer.innerHTML = `
-                    <h2>No se encontró un ID de imagen</h2>
-                    <p>Por favor, añade el ID de la imagen de prnt.sc a la URL después de un '#'.</p>
-                    <p>Ejemplo: <code>.../prntsc_viewer.html#MSyd2ujFfgV0</code></p>
+                    <h2>${translations[currentLang].noIdFound}</h2>
+                    <p>${translations[currentLang].noIdInstructions}</p>
+                    <p>${translations[currentLang].example} <code>.../prntsc_viewer.html#MSyd2ujFfgV0</code></p>
                 `;
                 return;
             }
 
-            // 2. Construir la URL de la página de prnt.sc
             const prntscUrl = `https://prnt.sc/${imageId}`;
-
-            // 3. Usar un proxy CORS para poder acceder al HTML de la página.
-            // Esto es necesario por las restricciones de seguridad de los navegadores.
             const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(prntscUrl)}`;
 
             try {
                 const response = await fetch(proxyUrl);
                 if (!response.ok) {
-                    throw new Error(`Error al acceder a la página de prnt.sc (código: ${response.status})`);
+                    throw new Error(`${translations[currentLang].fetchError} (código: ${response.status})`);
                 }
                 const html = await response.text();
 
-                // 4. Extraer la URL de la imagen real desde el HTML de la página.
-                // La URL de la imagen está alojada en 'img.lightshot.app'.
                 const match = html.match(/(https:\/\/img\.lightshot\.app\/[^\s"]+)/);
 
                 if (match && match[1]) {
                     const imageUrl = match[1];
-
-                    // 5. Crear la imagen y mostrarla
                     const img = document.createElement('img');
                     img.src = imageUrl;
-                    img.alt = `Imagen de ${prntscUrl}`;
+                    img.alt = `Image from ${prntscUrl}`;
                     
                     img.onload = () => {
                         loader.style.display = 'none';
                         imageContainer.appendChild(img);
                     };
                     img.onerror = () => {
-                         throw new Error(`No se pudo cargar la imagen final desde: ${imageUrl}`);
+                         throw new Error(`${translations[currentLang].imageLoadError} ${imageUrl}`);
                     };
-
                 } else {
-                    throw new Error('No se pudo encontrar la URL de la imagen en la página de prnt.sc. Es posible que el enlace esté roto o la estructura de la página haya cambiado.');
+                    throw new Error(translations[currentLang].imageFindError);
                 }
             } catch (error) {
                 loader.style.display = 'none';
                 errorContainer.style.display = 'block';
                 errorContainer.innerHTML = `
-                    <h2>Ha ocurrido un error</h2>
+                    <h2>${translations[currentLang].genericError}</h2>
                     <p>${error.message}</p>
-                    <p>Intenta visitar el enlace directamente: <a href="${prntscUrl}" target="_blank">${prntscUrl}</a></p>
+                    <p>${translations[currentLang].tryDirectLink} <a href="${prntscUrl}" target="_blank">${prntscUrl}</a></p>
                 `;
                 console.error(error);
             }
-        });
+        }
+
+        document.addEventListener('DOMContentLoaded', main);
     </script>
 
 </body>
